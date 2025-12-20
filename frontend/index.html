@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Analytics Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-chart-line"></i> Student Analytics Dashboard</h1>
+            <p>Анализ цифрового следа студентов в реальном времени</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="student-list">
+                    <h3><i class="fas fa-users"></i> Студенты</h3>
+                    <div class="student-search">
+                        <input type="text" id="studentSearch" placeholder="Поиск студента...">
+                    </div>
+                    <ul id="studentList">
+                        <!-- Студенты загружаются динамически -->
+                    </ul>
+                </div>
+                
+                <div class="actions">
+                    <h3><i class="fas fa-cogs"></i> Действия</h3>
+                    <button id="triggerAnalysis" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Запустить анализ
+                    </button>
+                    <button id="refreshData" class="btn btn-secondary">
+                        <i class="fas fa-sync"></i> Обновить данные
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Analytics Content -->
+            <main class="analytics-content">
+                <!-- Student Info -->
+                <div class="student-info" id="studentInfo">
+                    <div class="info-header">
+                        <h2><i class="fas fa-user-graduate"></i> Информация о студенте</h2>
+                        <div class="student-id">ID: <span id="currentStudentId">-</span></div>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-icon"><i class="fas fa-cluster"></i></div>
+                            <div class="info-content">
+                                <h4>Кластер</h4>
+                                <p id="clusterInfo">Не определен</p>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-icon"><i class="fas fa-fire"></i></div>
+                            <div class="info-content">
+                                <h4>Вовлеченность</h4>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="engagementBar" style="width: 0%"></div>
+                                </div>
+                                <p id="engagementScore">0/100</p>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-icon"><i class="fas fa-chart-pie"></i></div>
+                            <div class="info-content">
+                                <h4>Успешность</h4>
+                                <p id="successRate">0%</p>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-icon"><i class="fas fa-clock"></i></div>
+                            <div class="info-content">
+                                <h4>Среднее время</h4>
+                                <p id="avgTime">0 сек</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="charts">
+                    <div class="chart-container">
+                        <h3><i class="fas fa-chart-bar"></i> Эффективность по темам</h3>
+                        <canvas id="topicEfficiencyChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3><i class="fas fa-calendar-alt"></i> Активность по дням</h3>
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="recommendations">
+                    <h3><i class="fas fa-lightbulb"></i> Рекомендации</h3>
+                    <ul id="recommendationsList">
+                        <li>Выберите студента для просмотра рекомендаций</li>
+                    </ul>
+                </div>
+
+                <!-- Send Log Form -->
+                <div class="log-form">
+                    <h3><i class="fas fa-plus-circle"></i> Добавить лог студента</h3>
+                    <form id="logForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="studentId">ID студента</label>
+                                <input type="number" id="studentId" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="actionType">Тип действия</label>
+                                <select id="actionType" required>
+                                    <option value="view_material">Просмотр материала</option>
+                                    <option value="test_answer">Ответ на тест</option>
+                                    <option value="watch_video">Просмотр видео</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="materialId">ID материала</label>
+                                <input type="text" id="materialId" placeholder="math_001">
+                            </div>
+                            <div class="form-group">
+                                <label for="timeSpent">Время (сек)</label>
+                                <input type="number" id="timeSpent" min="1" value="60">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="correct">Правильно?</label>
+                                <select id="correct">
+                                    <option value="true">Да</option>
+                                    <option value="false">Нет</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="difficulty">Сложность (1-5)</label>
+                                <input type="number" id="difficulty" min="1" max="5" value="3">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane"></i> Отправить лог
+                        </button>
+                    </form>
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Student Analytics Platform &copy; 2024 | Реальное время: <span id="currentTime"></span></p>
+            <div class="status">
+                <span class="status-indicator active"></span>
+                <span>Система активна</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
