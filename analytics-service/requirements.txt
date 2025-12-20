@@ -1,0 +1,14 @@
+pandas==2.2.3
+numpy==1.26.4
+scikit-learn==1.5.2
+kafka-python==2.0.2
+grpcio==1.70.0
+grpcio-tools==1.70.0
+protobuf==5.28.3
+redis==5.0.7
+psycopg2-binary==2.9.10
+matplotlib==3.9.2
+seaborn==0.13.2
+python-dotenv==1.0.1
+fastapi==0.115.6
+uvicorn==0.34.0
