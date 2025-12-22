@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package analytics.v1;
+
+option go_package = "github.com/RusselRustCode/teacher_analytics/core-service/proto";
+
+service AnalyticsService {
+    rpc AnalyzeStudent (AnalyzeStudentRequest) returns (AnalyzeStudentResponse);
+    rpc HealthCheck (HealthCheckRequest) returns (HealthCheckResponse);
+    rpc BatchAnalyze (BatchAnalyzeRequest) returns (BatchAnalyzeResponse);
+}
+
+message AnalyzeStudentRequest {
+    uint64 student_id = 1;
+}
+
+message AnalyzeStudentResponse {
+    uint64 student_id = 1;
+    string cluster = 2;
+    int32 engagement_score = 3;
+    double success_rate = 4;
+    map<string, double> topic_efficiency = 5;
+    repeated string recommendations = 6;
+    string analyzed_at = 7;
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+    bool healthy = 1;
+    string message = 2;
+}
+
+message BatchAnalyzeRequest {
+    repeated uint64 student_ids = 1;
+}
+
+message BatchAnalyzeResponse {
+    repeated AnalyzeStudentResponse results = 1;
+}
