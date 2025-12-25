@@ -32,21 +32,18 @@ func NewAnalyticsService(
 }
 
 func (s *AnalyticsServiceImpl) SendLog(ctx context.Context, log *domain.StudentLog) error {
-    // Валидация
     if log.StudentID == 0 || log.ActionType == "" {
-        return fmt.Errorf("invalid log: student_id and action_type are required")
+        return fmt.Errorf("Неверная запись: требуются поля student_id и action_type.")
     }
     
     if log.Timestamp.IsZero() {
         log.Timestamp = time.Now()
     }
     
-    // Сохраняем в репозиторий
     if err := s.repo.SaveLog(ctx, log); err != nil {
-        return fmt.Errorf("failed to save log: %w", err)
+        return fmt.Errorf("Не получилось созранить лог: %w", err)
     }
     
-    // Отправляем в Kafka для обработки
     kafkaData := map[string]interface{}{
         "type":       "student_log",
         "student_id": log.StudentID,
@@ -55,19 +52,17 @@ func (s *AnalyticsServiceImpl) SendLog(ctx context.Context, log *domain.StudentL
     }
     
     if err := s.producer.SendJSON(ctx, "student-logs", kafkaData); err != nil {
-        return fmt.Errorf("failed to send to kafka: %w", err)
+        return fmt.Errorf("не получилось отправить в кафку: %w", err)
     }
     
-    // Инвалидируем кэш аналитики
-    cacheKey := fmt.Sprintf("analytics:%d", log.StudentID)
+    cacheKey := fmt.Sprintf("аналитика:%d", log.StudentID)
     s.cache.Delete(ctx, cacheKey)
     
     return nil
 }
 
 func (s *AnalyticsServiceImpl) GetAnalytics(ctx context.Context, studentID uint64) (*domain.StudentAnalytics, error) {
-    // Проверяем кэш
-    cacheKey := fmt.Sprintf("analytics:%d", studentID)
+    cacheKey := fmt.Sprintf("аналитика:%d", studentID)
     
     cached, err := s.cache.Get(ctx, cacheKey)
     if err == nil && cached != "" {
@@ -77,7 +72,6 @@ func (s *AnalyticsServiceImpl) GetAnalytics(ctx context.Context, studentID uint6
         }
     }
     
-    // Получаем из репозитория
     analytics, err := s.repo.GetAnalyticsByStudentID(ctx, studentID)
     if err == nil && analytics != nil {
         // Кэшируем
@@ -88,7 +82,7 @@ func (s *AnalyticsServiceImpl) GetAnalytics(ctx context.Context, studentID uint6
     
     // Если нет аналитики, запускаем анализ
     if err := s.TriggerAnalysis(ctx, studentID); err != nil {
-        return nil, fmt.Errorf("failed to trigger analysis: %w", err)
+        return nil, fmt.Errorf("не удалось запустить анализ: %w", err)
     }
     
     // Возвращаем заглушку
@@ -103,7 +97,6 @@ func (s *AnalyticsServiceImpl) GetAnalytics(ctx context.Context, studentID uint6
 }
 
 func (s *AnalyticsServiceImpl) TriggerAnalysis(ctx context.Context, studentID uint64) error {
-    // Отправляем команду на анализ в Kafka
     analysisCmd := map[string]interface{}{
         "type":       "analysis_command",
         "command":    "analyze_student",

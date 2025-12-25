@@ -31,7 +31,6 @@ func (s *AnalyticsServiceTestSuite) SetupTest() {
 	s.producerMock = new(mocks.MessageProducer)
 	s.clientMock = new(mocks.AnalyticsClient)
 
-	// Инициализируем сервис с моками
 	s.service = application.NewAnalyticsService(
 		s.repoMock,
 		s.cacheMock,
@@ -48,7 +47,6 @@ func (s *AnalyticsServiceTestSuite) TestSendLog_Success() {
 		Timestamp:  time.Now(),
 	}
 
-	// Настраиваем ожидания: сохранение в БД и отправка в Kafka
 	s.repoMock.On("SaveLog", s.ctx, log).Return(nil)
 	s.producerMock.On("SendLog", log).Return(nil)
 
@@ -63,7 +61,6 @@ func (s *AnalyticsServiceTestSuite) TestGetAnalytics_CacheHit() {
 	studentID := uint64(123)
 	cachedData := `{"student_id":123, "status":"Active"}`
 
-	// Имитируем ситуацию, когда данные есть в Redis
 	s.cacheMock.On("Get", s.ctx, mock.Anything).Return(cachedData, nil)
 
 	res, err := s.service.GetAnalytics(s.ctx, studentID)
@@ -72,7 +69,6 @@ func (s *AnalyticsServiceTestSuite) TestGetAnalytics_CacheHit() {
 	assert.NotNil(s.T(), res)
 	assert.Equal(s.T(), studentID, res.StudentID)
 	
-	// Проверяем, что в репозиторий или gRPC клиент мы НЕ ходили
 	s.repoMock.AssertNotCalled(s.T(), "GetAnalyticsByStudentID", mock.Anything, mock.Anything)
 }
 

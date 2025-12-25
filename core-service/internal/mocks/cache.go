@@ -120,3 +120,8 @@ func NewCache(t interface {
 
 	return mock
 }
+
+func (m *Cache) Close() error {
+    args := m.Called()
+    return args.Error(0)
+}

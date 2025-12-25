@@ -76,7 +76,6 @@ func (h *HTTPHandler) GetStudentLogs(c *gin.Context) {
         return
     }
     
-    // Параметры дат (опционально)
     fromStr := c.DefaultQuery("from", "")
     toStr := c.DefaultQuery("to", "")
     
@@ -89,7 +88,7 @@ func (h *HTTPHandler) GetStudentLogs(c *gin.Context) {
             return
         }
     } else {
-        from = time.Now().AddDate(0, -1, 0) // Месяц назад по умолчанию
+        from = time.Now().AddDate(0, -1, 0) // Месяц назад по умолчанию сделаем
     }
     
     if toStr != "" {

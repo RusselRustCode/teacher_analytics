@@ -24,7 +24,7 @@ func NewGRPCHandler(service interfaces.AnalyticsService) *GRPCHandler {
 func (h *GRPCHandler) AnalyzeStudent(ctx context.Context, req *pb.AnalyzeStudentRequest) (*pb.AnalyzeStudentResponse, error) {
     analytics, err := h.service.GetAnalytics(ctx, req.StudentId)
     if err != nil {
-        return nil, status.Errorf(codes.Internal, "failed to get analytics: %v", err)
+        return nil, status.Errorf(codes.Internal, "не получилось получить аналитику: %v", err)
     }
     
     return &pb.AnalyzeStudentResponse{
@@ -39,18 +39,17 @@ func (h *GRPCHandler) AnalyzeStudent(ctx context.Context, req *pb.AnalyzeStudent
 }
 
 func (h *GRPCHandler) HealthCheck(ctx context.Context, req *pb.HealthCheckRequest) (*pb.HealthCheckResponse, error) {
-    // Проверяем доступность зависимостей
     _, err := h.service.GetStudents(ctx)
     if err != nil {
         return &pb.HealthCheckResponse{
             Healthy: false,
-            Message: "Service dependencies not available",
+            Message: "Зависимости сервиса недоступны",
         }, nil
     }
     
     return &pb.HealthCheckResponse{
         Healthy: true,
-        Message: "Service is healthy",
+        Message: "Сервис жив!",
     }, nil
 }
 
@@ -60,7 +59,7 @@ func (h *GRPCHandler) BatchAnalyze(ctx context.Context, req *pb.BatchAnalyzeRequ
     for _, studentID := range req.StudentIds {
         analytics, err := h.service.GetAnalytics(ctx, studentID)
         if err != nil {
-            continue // Пропускаем ошибки в batch режиме
+            continue 
         }
         
         results = append(results, &pb.AnalyzeStudentResponse{

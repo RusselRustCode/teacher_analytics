@@ -28,27 +28,22 @@ func (s *GRPCHandlerTestSuite) TestAnalyzeStudent_Success() {
 	ctx := context.Background()
 	var studentID uint64 = 1
 
-	// Данные, которые якобы вернет наш сервис (UseCase)
 	expectedAnalytics := &domain.StudentAnalytics{
 		StudentID:    studentID,
-		ClusterGroup: "high_performer", // Согласно вашему struct
+		ClusterGroup: "high_performer", 
 		EngagementScore: 90,
 		SuccessRate:     0.95,
 		AnalyzedAt:      time.Now(),
 	}
 
-	// Настраиваем мок. В интерфейсе метод называется GetAnalytics
 	s.serviceMock.On("GetAnalytics", ctx, studentID).Return(expectedAnalytics, nil)
 
-	// Создаем правильный запрос из вашего proto
 	req := &proto.AnalyzeStudentRequest{
 		StudentId: studentID,
 	}
 
-	// Вызываем актуальный метод хендлера
 	resp, err := s.handler.AnalyzeStudent(ctx, req)
 
-	// Проверки
 	assert.NoError(s.T(), err)
 	assert.NotNil(s.T(), resp)
 	assert.Equal(s.T(), studentID, resp.StudentId)

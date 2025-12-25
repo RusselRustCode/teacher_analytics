@@ -1,37 +1,33 @@
 FROM golang:1.25-alpine AS builder
 
+RUN apk add --no-cache git gcc musl-dev protobuf-dev protobuf ca-certificates
+
 WORKDIR /app
-
-
-RUN apk add --no-cache git gcc musl-dev protobuf-dev
-
 
 COPY go.mod go.sum ./
 RUN go mod download
 
-
 COPY . .
 
 
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-RUN go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
-
-RUN ./scripts/generate.sh
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest && \
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest && \
+    go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
 
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main ./cmd/app
+RUN protoc --proto_path=. \
+    --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+    proto/*.proto
+
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main ./cmd/app/main.go
 
 
 FROM alpine:latest
-
-RUN apk --no-cache add ca-certificates
-
+RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /root/
-
 COPY --from=builder /app/main .
-COPY --from=builder /app/config.yaml .
 
 EXPOSE 8080 50051
-
 CMD ["./main"]
