@@ -1,24 +1,42 @@
 import asyncio
-import grpc
-from proto import analytics_pb2_grpc
+import os
+from app.infrastructure.database import PostgresRepository
+from app.infrastructure.grpc_server import GRPCServer
+from app.application.analyze_module import AnalyticsService
 from app.api.grpc_handler import AnalyticsGRPCHandler
-from app.application.analytics_service import AnalyticsService
-from app.infrastructure.database import PostgresRepository # Твой будущий репо
+from app.infrastructure.kafka_consumer import AnalyticsConsumer
+from app.infrastructure.redis_client import RedisCache
 
-async def serve():
-    # Инициализируем слои (Dependency Injection)
-    repo = PostgresRepository()
-    service = AnalyticsService(repo)
+async def main():
+    DSN = os.getenv("DATABASE_URL", "postgresql://admin:admin_password@student-analytics-postgres:5432/student_analytics")
+    PORT = os.getenv("GRPC_PORT", "50052")
+    KAFKA_BROKERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "student-analytics-kafka:9092")
+    REDIS_HOST = os.getenv("REDIS_HOST", "student-analytics-redis")
+    REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+
+    repo = PostgresRepository(DSN)
+    await repo.connect()
+
+
+    cache = RedisCache(host=REDIS_HOST, port=REDIS_PORT)
+    service = AnalyticsService(repo, cache)
     handler = AnalyticsGRPCHandler(service)
 
-    server = grpc.aio.server()
-    analytics_pb2_grpc.add_AnalyticsServiceServicer_to_server(handler, server)
+    server = GRPCServer(port=PORT, handler=handler)
     
-    server.add_insecure_port('[::]:50052')
-    print("Python Analytics Service started on port 50052")
+    consumer = AnalyticsConsumer(brokers=KAFKA_BROKERS, topic="student-logs", service=service)
+
+    print(f"--- Analytics Service запущен на порту {PORT} ---")
     
-    await server.start()
-    await server.wait_for_termination()
+    try:
+        await asyncio.gather(
+            server.start(),        
+            consumer.start(),      
+        )
+    except Exception as e:
+        print(f"Ошибка: {e}")
+    finally:
+        await repo.close()
 
 if __name__ == "__main__":
-    asyncio.run(serve())
+    asyncio.run(main())

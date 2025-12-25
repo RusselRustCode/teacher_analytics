@@ -1,44 +1,103 @@
-from typing import List
 import pandas as pd
 from app.domain.models import StudentAnalytics
 from app.analyzers.engagement_analyzer import EngagementAnalyzer
-from app.analyzers.cluster_analyzer import StudentClusterer # Обернем твой код в класс
+from app.analyzers.cluster_analyzer import StudentClusterer
 from app.analyzers.material_analyzer import MaterialEffectivenessAnalyzer
 
 class AnalyticsService:
-    def __init__(self, repo):
+    def __init__(self, repo, cache):
         self.repo = repo
+        self.clusterer = StudentClusterer()
+        self.cache = cache
 
-    async def get_student_analysis(self, student_id: int) -> StudentAnalytics:
-        # 1. Загружаем логи студента из БД
-        raw_logs = await self.repo.get_logs_by_student(student_id)
-        if not raw_logs:
-            raise ValueError("No logs found for student")
+    async def get_student_analysis(self, student_id: int):
+        
+        cached_data = await self.cache.get_analytics(f"analytics:{student_id}")
+        if cached_data:
+            print(f"--- Returning cached data for student {student_id} ---")
+            return cached_data
+        logs_dict = await self.repo.get_logs_by_student(student_id)
+        if not logs_dict:
+            return self._empty_response(student_id)
+        
+        df = pd.DataFrame(logs_dict)
+        
+        required_columns = [
+            'time_spent_on_question', 
+            'time_spent_on_material', 
+            'selected_distractor_freq', 
+            'study_time_preference'
+        ]
+        for col in required_columns:
+            if col not in df.columns:
+                df[col] = 0
 
-        df = pd.DataFrame(raw_logs)
+        eng = EngagementAnalyzer(df)
+        eng.calculate_all()
+        summary = eng.get_summary(student_id)
 
-        # 2. Считаем вовлеченность (твой код)
-        eng_analyzer = EngagementAnalyzer(df)
-        eng_analyzer.calculate_engagement_metrics()
-        eng_summary = eng_analyzer.get_student_engagement_summary(student_id)
+        mat = MaterialEffectivenessAnalyzer(df)
+        mat_stats = mat.analyze()
 
-        # 3. Определяем кластер (твой код DBSCAN)
-        clusterer = StudentClusterer()
-        cluster_name = clusterer.predict_cluster(df)
+        cluster = self.clusterer.predict_cluster(df)
 
-        # 4. Собираем финальный объект
-        return StudentAnalytics(
+        analysis_result = StudentAnalytics(
             student_id=student_id,
-            cluster_group=cluster_name,
-            engagement_score=int(eng_summary['efficiency']['эффективность обучения'] * 100),
-            success_rate=df['correct'].mean(),
-            topic_efficiency={}, # Сюда можно добавить логику из MaterialAnalyzer
-            recommendations=self._generate_recs(cluster_name)
+            cluster_group=cluster,
+            engagement_score=self._calculate_score(summary),
+            success_rate=float(summary.get('learning_patterns', {}).get('avg_correctness', 0)),
+            topic_efficiency={k: v['success_rate'] for k, v in mat_stats.items()},
+            recommendations=self._build_recs(cluster, summary)
         )
-
-    def _generate_recs(self, cluster: str) -> List[str]:
-        recs = {
-            "high_performer": ["Add more complex tasks", "Suggest peer-reviewing"],
-            "needs_help": ["Review basic materials", "Schedule a consultation"],
+        
+        analysis_dict = {
+            "student_id": analysis_result.student_id,
+            "cluster_group": analysis_result.cluster_group,
+            "engagement_score": analysis_result.engagement_score,
+            "success_rate": analysis_result.success_rate,
+            "recommendations": analysis_result.recommendations
         }
-        return recs.get(cluster, ["Continue regular practice"])
+        
+        await self.cache.set_analytics(f"analytics:{student_id}", analysis_dict)
+        print(f"--- Saved analysis to Redis for student {student_id} ---")
+
+        return analysis_result
+
+    def _calculate_score(self, summary):
+        # Процент успеха * (1 - уровень пассивности)
+        lp = summary.get('learning_patterns', {})
+        score = lp.get('avg_correctness', 0) * (1 - lp.get('passive_score', 0))
+        return int(score * 100)
+
+    def _build_recs(self, cluster, summary):
+        recs = []
+        if summary.get('risk', {}).get('risk_flag') == -1:
+            recs.append("Risk detected: abnormal learning pattern")
+        if cluster == "struggling":
+            recs.append("Focus on basic materials")
+        else:
+            recs.append("Maintain current pace")
+        return recs
+    
+    async def process_new_log(self, data: dict):
+        student_id = data.get('student_id')
+        if not student_id:
+            return
+        
+        analysis = await self.get_student_analysis(student_id)
+        
+        if isinstance(analysis, dict):
+            analysis_dict = analysis
+            s_id = analysis.get('student_id')
+        else:
+            analysis_dict = {
+                "student_id": analysis.student_id,
+                "cluster_group": analysis.cluster_group,
+                "engagement_score": analysis.engagement_score,
+                "success_rate": analysis.success_rate,
+                "recommendations": analysis.recommendations
+            }
+            s_id = analysis.student_id
+        
+        await self.cache.set_analytics(student_id, analysis_dict)
+        print(f"--- Cache updated in Redis for student {s_id} ---")

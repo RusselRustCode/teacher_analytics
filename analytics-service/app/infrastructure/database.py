@@ -1,5 +1,5 @@
-import asyncpg # Быстрая асинхронная библиотека для Postgres
-import pandas as pd
+import asyncpg
+import json
 
 class PostgresRepository:
     def __init__(self, dsn: str):
@@ -11,20 +11,24 @@ class PostgresRepository:
             self.pool = await asyncpg.create_pool(dsn=self.dsn)
 
     async def get_logs_by_student(self, student_id: int):
-        # Запрос всех логов для конкретного студента
-        query = "SELECT * FROM student_logs WHERE student_id = $1"
+        query = """
+            SELECT 
+                student_id,
+                artifact_id as material_id,
+                artifact_type,
+                action_time as timestamp,
+                (metadata->>'time_spent')::float as time_spent_sec,
+                (metadata->>'correctness')::float as correctness,
+                (metadata->>'attempts')::int as attempts,
+                (metadata->>'selected_distractor') as selected_distractor
+            FROM student_logs
+            WHERE student_id = $1
+            ORDER BY action_time ASC
+        """
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(query, student_id)
-            # Конвертируем записи asyncpg в список словарей (для Pandas)
             return [dict(row) for row in rows]
 
-    async def get_all_logs(self):
-        # Для кластеризации нам могут понадобиться данные всех студентов
-        query = "SELECT * FROM student_logs"
-        async with self.pool.acquire() as conn:
-            rows = await conn.fetch(query)
-            return [dict(row) for row in rows]
-            
     async def close(self):
         if self.pool:
             await self.pool.close()

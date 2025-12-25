@@ -8,15 +8,14 @@ class AnalyticsConsumer:
             bootstrap_servers=brokers,
             group_id="analytics_group"
         )
-        self.service = service # Ссылка на application.AnalyticsService
+        self.service = service 
 
     async def start(self):
         await self.consumer.start()
         try:
             async for msg in self.consumer:
                 data = json.loads(msg.value)
-                # Например, при поступлении нового лога - пересчитываем кэш
-                print(f"Received log for student {data['student_id']}, triggering update...")
-                # await self.service.process_new_log(data) 
+                print(f"Поступил лог на студента {data['student_id']}, triggering update...")
+                await self.service.process_new_log(data) 
         finally:
             await self.consumer.stop()

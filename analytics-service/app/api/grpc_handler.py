@@ -1,6 +1,6 @@
 import grpc
 from proto import analytics_pb2, analytics_pb2_grpc
-from app.application.analytics_service import AnalyticsService
+from app.application.analyze_module import AnalyticsService
 
 class AnalyticsGRPCHandler(analytics_pb2_grpc.AnalyticsServiceServicer):
     def __init__(self, service: AnalyticsService):
@@ -8,10 +8,9 @@ class AnalyticsGRPCHandler(analytics_pb2_grpc.AnalyticsServiceServicer):
 
     async def AnalyzeStudent(self, request, context):
         try:
-            # Вызываем бизнес-логику
             result = await self.service.get_student_analysis(request.student_id)
             
-            # Мапим в Protobuf Response
+            # Мапим в Protobuf Response(не забыть про аналог protoc...)
             return analytics_pb2.AnalyzeStudentResponse(
                 student_id=result.student_id,
                 cluster=result.cluster_group,

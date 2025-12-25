@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
 
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir --upgrade protobuf==5.29.0
 
 
 COPY . .
@@ -20,4 +21,4 @@ RUN mkdir -p /var/log/analytics
 
 EXPOSE 50052
 
-CMD ["python", "app/main.py"]
+CMD ["python", "-m", "app.main"]
