@@ -55,14 +55,14 @@ func (s *AnalyticsServiceImpl) SendLog(ctx context.Context, log *domain.StudentL
         return fmt.Errorf("не получилось отправить в кафку: %w", err)
     }
     
-    cacheKey := fmt.Sprintf("аналитика:%d", log.StudentID)
+    cacheKey := fmt.Sprintf("analytics:%d", log.StudentID)
     s.cache.Delete(ctx, cacheKey)
     
     return nil
 }
 
 func (s *AnalyticsServiceImpl) GetAnalytics(ctx context.Context, studentID uint64) (*domain.StudentAnalytics, error) {
-    cacheKey := fmt.Sprintf("аналитика:%d", studentID)
+    cacheKey := fmt.Sprintf("analytics:%d", studentID)
     
     cached, err := s.cache.Get(ctx, cacheKey)
     if err == nil && cached != "" {
