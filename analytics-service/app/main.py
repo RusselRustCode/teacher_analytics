@@ -10,7 +10,7 @@ from app.infrastructure.redis_client import RedisCache
 async def main():
     DSN = os.getenv("DATABASE_URL", "postgresql://admin:admin_password@student-analytics-postgres:5432/student_analytics")
     PORT = os.getenv("GRPC_PORT", "50052")
-    KAFKA_BROKERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "student-analytics-kafka:9092")
+    KAFKA_BROKERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9094")
     REDIS_HOST = os.getenv("REDIS_HOST", "student-analytics-redis")
     REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 
