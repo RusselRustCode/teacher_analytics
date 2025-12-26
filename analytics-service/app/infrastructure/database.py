@@ -14,16 +14,15 @@ class PostgresRepository:
         query = """
             SELECT 
                 student_id,
-                artifact_id as material_id,
-                artifact_type,
-                action_time as timestamp,
-                (metadata->>'time_spent')::float as time_spent_sec,
-                (metadata->>'correctness')::float as correctness,
-                (metadata->>'attempts')::int as attempts,
-                (metadata->>'selected_distractor') as selected_distractor
+                action_type as artifact_type,
+                timestamp,
+                time_spent_sec,
+                CASE WHEN correct THEN 1.0 ELSE 0.0 END as correctness,
+                1 as attempts, -- заглушка
+                'none' as selected_distractor -- заглушка
             FROM student_logs
             WHERE student_id = $1
-            ORDER BY action_time ASC
+            ORDER BY timestamp ASC
         """
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(query, student_id)
