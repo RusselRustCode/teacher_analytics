@@ -12,7 +12,7 @@ class AnalyticsService:
 
     async def get_student_analysis(self, student_id: int):
         
-        cached_data = await self.cache.get_analytics(f"analytics:{student_id}")
+        cached_data = await self.cache.get_analytics(student_id)
         if cached_data:
             print(f"--- Returning cached data for student {student_id} ---")
             return cached_data
@@ -21,6 +21,13 @@ class AnalyticsService:
             return self._empty_response(student_id)
         
         df = pd.DataFrame(logs_dict)
+        
+        if 'time_spent_sec' in df.columns:
+            df['time_spent_on_question'] = df['time_spent_sec']
+            df['time_spent_on_material'] = df['time_spent_sec']
+        
+        if 'correct' in df.columns:
+            df['avg_correctness'] = df['correct'].astype(int)
         
         required_columns = [
             'time_spent_on_question', 
@@ -99,5 +106,17 @@ class AnalyticsService:
             }
             s_id = analysis.student_id
         
-        await self.cache.set_analytics(student_id, analysis_dict)
-        print(f"--- Cache updated in Redis for student {s_id} ---")
+        await self.cache.set_analytics(student_id, analysis_dict) 
+        print(f"--- Cache updated in Redis for student {student_id} ---")
+        
+    def _empty_response(self, student_id: int):
+        """Возвращает дефолтную структуру, если данных в БД нет"""
+        from app.domain.models import StudentAnalytics 
+        return StudentAnalytics(
+            student_id=student_id,
+            cluster_group="unknown",
+            engagement_score=0,
+            success_rate=0.0,
+            topic_efficiency={},
+            recommendations=["No data available yet"]
+        )
