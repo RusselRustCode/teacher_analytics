@@ -26,3 +26,26 @@
 -Go-сервис сначала заглядывает в Redis.
 -Если данные там есть (Python уже всё посчитал) — они возвращаются.
 -Если данных нет (например, это первый запрос или анализ еще идет) — Go отдает статус processing и отправляет в Kafka команду.
+
+
+# Проверка:
+# Остановить и удалить старые контейнеры
+docker-compose down
+
+# Собрать и запустить проект (Go, Python, Postgres, Kafka, Redis)
+docker-compose up -d --build
+
+# Очистить Redis, чтобы старые тесты не мешали
+docker exec -it student-analytics-redis redis-cli flushall
+
+# Зайти в базу и посмотреть таблицу логов
+docker exec -it student-analytics-db psql -U user -d teacher_analytics -c "SELECT * FROM student_logs;"
+
+# Пример запроса
+Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/log -ContentType "application/json" -Body '{"student_id": 55, "action_type": "exam", "correct": true, "time_spent_sec": 300}'
+
+# Запрос 
+Invoke-RestMethod -Uri http://localhost:8080/api/analytics/55
+
+# Проверка Redis
+docker exec -it student-analytics-redis redis-cli keys *
