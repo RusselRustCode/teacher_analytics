@@ -40,21 +40,28 @@ func (s *AnalyticsServiceTestSuite) SetupTest() {
 }
 
 func (s *AnalyticsServiceTestSuite) TestSendLog_Success() {
-	log := &domain.StudentLog{
-		StudentID:  1,
-		ActionType:     "view_lesson",
-		MaterialID: "math_101",
-		Timestamp:  time.Now(),
-	}
+    log := &domain.StudentLog{
+        StudentID:  1,
+        ActionType:  "view_lesson",
+        MaterialID: "math_101",
+        Timestamp:  time.Now(),
+    }
 
-	s.repoMock.On("SaveLog", s.ctx, log).Return(nil)
-	s.producerMock.On("SendLog", log).Return(nil)
+    s.repoMock.On("SaveLog", s.ctx, log).Return(nil)
 
-	err := s.service.SendLog(s.ctx, log)
+    s.producerMock.On("SendJSON", 
+        s.ctx,              
+        "student-logs",     
+        mock.Anything,      
+    ).Return(nil)
 
-	assert.NoError(s.T(), err)
-	s.repoMock.AssertExpectations(s.T())
-	s.producerMock.AssertExpectations(s.T())
+    s.cacheMock.On("Delete", s.ctx, mock.Anything).Return(nil)
+
+    err := s.service.SendLog(s.ctx, log)
+
+    assert.NoError(s.T(), err)
+    s.repoMock.AssertExpectations(s.T())
+    s.producerMock.AssertExpectations(s.T())
 }
 
 func (s *AnalyticsServiceTestSuite) TestGetAnalytics_CacheHit() {
