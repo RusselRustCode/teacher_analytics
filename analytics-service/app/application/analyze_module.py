@@ -28,6 +28,15 @@ class AnalyticsService:
         
         if 'correct' in df.columns:
             df['avg_correctness'] = df['correct'].astype(int)
+            
+        # Фильтруем "чушь"
+        if not df.empty:
+            df = df[df['time_spent_sec'] >= 0]
+            
+            df.loc[df['time_spent_sec'] > 86400, 'time_spent_sec'] = 86400
+            
+        if 'correctness' in df.columns:
+            df['correctness'] = df['correctness'].clip(0, 1)
         
         required_columns = {
             'time_spent_on_question': 'time_spent_sec',
