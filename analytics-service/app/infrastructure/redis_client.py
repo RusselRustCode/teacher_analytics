@@ -11,3 +11,7 @@ class RedisCache:
     async def get_analytics(self, student_id: int):
         data = await self.client.get(f"analytics:{student_id}")
         return json.loads(data) if data else None
+    
+    async def delete_analytics(self, student_id: int):
+        key = f"analytics:{student_id}" 
+        await self.client.delete(key)

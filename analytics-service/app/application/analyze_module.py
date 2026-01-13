@@ -29,15 +29,22 @@ class AnalyticsService:
         if 'correct' in df.columns:
             df['avg_correctness'] = df['correct'].astype(int)
         
-        required_columns = [
-            'time_spent_on_question', 
-            'time_spent_on_material', 
-            'selected_distractor_freq', 
-            'study_time_preference'
-        ]
-        for col in required_columns:
+        required_columns = {
+            'time_spent_on_question': 'time_spent_sec',
+            'time_spent_on_material': 'time_spent_sec',
+            'selected_distractor_freq': 0,
+            'study_time_preference': 0,
+            'material_id': 0,      
+            'attempts': 1,
+            'selected_distractor': 'none'
+        }
+
+        for col, default in required_columns.items():
             if col not in df.columns:
-                df[col] = 0
+                if isinstance(default, str) and default in df.columns:
+                    df[col] = df[default]
+                else:
+                    df[col] = default
 
         eng = EngagementAnalyzer(df)
         eng.calculate_all()
@@ -70,6 +77,9 @@ class AnalyticsService:
         
         await self.cache.set_analytics(student_id, analysis_dict)
         print(f"--- Saved analysis to Redis for student {student_id} ---")
+        
+        print(f"DEBUG: DF columns: {df.columns.tolist()}") 
+        print(f"DEBUG: DF head: {df.head().to_dict()}")
 
         return analysis_result
 
@@ -94,23 +104,11 @@ class AnalyticsService:
         if not student_id:
             return
         
+        await self.cache.delete_analytics(student_id) 
+        
         analysis = await self.get_student_analysis(student_id)
         
-        if isinstance(analysis, dict):
-            analysis_dict = analysis
-            s_id = analysis.get('student_id')
-        else:
-            analysis_dict = {
-                "student_id": analysis.student_id,
-                "cluster_group": analysis.cluster_group,
-                "engagement_score": analysis.engagement_score,
-                "success_rate": analysis.success_rate,
-                "recommendations": analysis.recommendations
-            }
-            s_id = analysis.student_id
-        
-        await self.cache.set_analytics(student_id, analysis_dict) 
-        print(f"--- Cache updated in Redis for student {student_id} ---")
+        print(f"--- [PYTHON] Анализ пересчитан для студента {student_id} ---")
         
     def _empty_response(self, student_id: int):
         """Возвращает дефолтную структуру, если данных в БД нет"""
