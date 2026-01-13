@@ -48,23 +48,28 @@ func (r *PostgresRepository) GetStudentByID(ctx context.Context, id uint64) (*do
 	return s, err
 }
 
-func (r *PostgresRepository) GetStudents(ctx context.Context) ([]*domain.Student, error) {
-	query := `SELECT id, name, email FROM students`
-	rows, err := r.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+func (r *PostgresRepository) GetStudents(ctx context.Context) ([]uint64, error) {
+    query := `SELECT DISTINCT student_id FROM student_logs`
+    rows, err := r.db.QueryContext(ctx, query)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-	var students []*domain.Student
-	for rows.Next() {
-		s := &domain.Student{}
-		if err := rows.Scan(&s.ID, &s.Name, &s.Email); err != nil {
-			return nil, err
-		}
-		students = append(students, s)
-	}
-	return students, nil
+    var studentIDs []uint64
+    for rows.Next() {
+        var id uint64
+        if err := rows.Scan(&id); err != nil {
+            return nil, err
+        }
+        studentIDs = append(studentIDs, id)
+    }
+    
+    if err = rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return studentIDs, nil
 }
 
 

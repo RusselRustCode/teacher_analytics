@@ -31,3 +31,26 @@ class PostgresRepository:
     async def close(self):
         if self.pool:
             await self.pool.close()
+            
+    async def save_analytics(self, student_id: int, result: dict):
+        query = """
+            INSERT INTO student_analytics 
+            (student_id, cluster_group, engagement_score, avg_time_per_task, success_rate, analyzed_at) 
+            VALUES ($1, $2, $3, $4, $5, NOW()) 
+            ON CONFLICT (student_id) 
+            DO UPDATE SET 
+                cluster_group = EXCLUDED.cluster_group,
+                engagement_score = EXCLUDED.engagement_score,
+                avg_time_per_task = EXCLUDED.avg_time_per_task,
+                success_rate = EXCLUDED.success_rate,
+                analyzed_at = NOW();
+            """
+        await self.pool.execute(
+            query, 
+            student_id, 
+            result.get('cluster', 'unknown'),
+            float(result.get('engagement_score', 0)),
+            float(result.get('avg_time', 0)),
+            float(result.get('success_rate', 0)),
+            # result.get('recommendations', [])
+        )

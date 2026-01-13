@@ -108,33 +108,26 @@ func (_m *AnalyticsService) GetStudentLogs(ctx context.Context, studentID uint64
 }
 
 // GetStudents provides a mock function with given fields: ctx
-func (_m *AnalyticsService) GetStudents(ctx context.Context) ([]*domain.Student, error) {
-	ret := _m.Called(ctx)
+func (m *AnalyticsService) GetStudents(ctx context.Context) ([]uint64, error) {
+    args := m.Called(ctx)
+    
+    var r0 []uint64
+    if rf, ok := args.Get(0).(func(context.Context) []uint64); ok {
+        r0 = rf(ctx)
+    } else {
+        if args.Get(0) != nil {
+            r0 = args.Get(0).([]uint64)
+        }
+    }
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetStudents")
-	}
+    var r1 error
+    if rf, ok := args.Get(1).(func(context.Context) error); ok {
+        r1 = rf(ctx)
+    } else {
+        r1 = args.Error(1)
+    }
 
-	var r0 []*domain.Student
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]*domain.Student, error)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context) []*domain.Student); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*domain.Student)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+    return r0, r1
 }
 
 // SendLog provides a mock function with given fields: ctx, log

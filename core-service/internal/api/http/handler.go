@@ -23,6 +23,14 @@ func NewHTTPHandler(service interfaces.AnalyticsService) *HTTPHandler {
     }
 }
 
+// SendLog godoc
+// @Summary Отправить лог активности
+// @Tags logs
+// @Accept json
+// @Produce json
+// @Param log body domain.StudentLog true "Данные лога"
+// @Success 200 {object} map[string]interface{}
+// @Router /log [post]
 func (h *HTTPHandler) SendLog(c *gin.Context) {
     var log domain.StudentLog
     
@@ -48,6 +56,14 @@ func (h *HTTPHandler) SendLog(c *gin.Context) {
     })
 }
 
+
+// GetAnalytics godoc
+// @Summary Получить аналитику студента
+// @Tags analytics
+// @Produce json
+// @Param student_id path int true "ID Студента"
+// @Success 200 {object} domain.StudentAnalytics
+// @Router /analytics/{student_id} [get]
 func (h *HTTPHandler) GetAnalytics(c *gin.Context) {
     studentIDStr := c.Param("student_id")
     studentID, err := strconv.ParseUint(studentIDStr, 10, 64)
@@ -70,6 +86,18 @@ func (h *HTTPHandler) GetAnalytics(c *gin.Context) {
     c.JSON(http.StatusOK, analytics)
 }
 
+// GetStudentLogs godoc
+// @Summary      Получить логи студента
+// @Description  Возвращает список всех действий студента за указанный период
+// @Tags         Students
+// @Produce      json
+// @Param        student_id  path      int     true   "ID студента"
+// @Param        from        query     string  false  "Начало периода (RFC3339, e.g. 2026-01-01T00:00:00Z)"
+// @Param        to          query     string  false  "Конец периода (RFC3339)"
+// @Success      200         {object}  map[string]interface{}
+// @Failure      400         {object}  map[string]string
+// @Failure      500         {object}  map[string]string
+// @Router       /students/{student_id}/logs [get]
 func (h *HTTPHandler) GetStudentLogs(c *gin.Context) {
     studentIDStr := c.Param("student_id")
     studentID, err := strconv.ParseUint(studentIDStr, 10, 64)
@@ -119,6 +147,15 @@ func (h *HTTPHandler) GetStudentLogs(c *gin.Context) {
     })
 }
 
+
+// GetStudents godoc
+// @Summary      Список всех студентов
+// @Description  Возвращает список уникальных ID студентов, по которым есть данные
+// @Tags         Students
+// @Produce      json
+// @Success      200         {object}  map[string]interface{}
+// @Failure      500         {object}  map[string]string
+// @Router       /students [get]
 func (h *HTTPHandler) GetStudents(c *gin.Context) {
     students, err := h.service.GetStudents(c.Request.Context())
     if err != nil {

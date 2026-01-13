@@ -115,7 +115,7 @@ func (s *AnalyticsServiceImpl) GetStudentLogs(ctx context.Context, studentID uin
     return s.repo.GetLogsByStudentID(ctx, studentID, from, to)
 }
 
-func (s *AnalyticsServiceImpl) GetStudents(ctx context.Context) ([]*domain.Student, error) {
+func (s *AnalyticsServiceImpl) GetStudents(ctx context.Context) ([]uint64, error) {
     return s.repo.GetStudents(ctx)
 }
 

@@ -62,10 +62,13 @@ class AnalyticsService:
             "cluster_group": analysis_result.cluster_group,
             "engagement_score": analysis_result.engagement_score,
             "success_rate": analysis_result.success_rate,
-            "recommendations": analysis_result.recommendations
+            "recommendations": analysis_result.recommendations,
+            "avg_time": 0.0
         }
+        await self.repo.save_analytics(student_id, analysis_dict)
+        print(f"--- [POSTGRES] Analysis saved for student {student_id} ---")
         
-        await self.cache.set_analytics(f"analytics:{student_id}", analysis_dict)
+        await self.cache.set_analytics(student_id, analysis_dict)
         print(f"--- Saved analysis to Redis for student {student_id} ---")
 
         return analysis_result

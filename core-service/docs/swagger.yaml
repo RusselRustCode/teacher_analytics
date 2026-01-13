@@ -1,0 +1,103 @@
+basePath: /api
+definitions:
+  domain.StudentAnalytics:
+    properties:
+      analyzed_at:
+        type: string
+      avg_time_per_task:
+        type: number
+      cluster_group:
+        type: string
+      engagement_score:
+        type: integer
+      id:
+        type: integer
+      recommendations:
+        items:
+          type: string
+        type: array
+      student_id:
+        type: integer
+      success_rate:
+        type: number
+      topic_efficiency:
+        additionalProperties:
+          format: float64
+          type: number
+        type: object
+    type: object
+  domain.StudentLog:
+    properties:
+      action_type:
+        type: string
+      attempts:
+        type: integer
+      correct:
+        type: boolean
+      difficulty:
+        type: integer
+      id:
+        type: integer
+      material_id:
+        type: string
+      selected_distractor:
+        type: string
+      student_id:
+        type: integer
+      time_spent_on_mat:
+        type: integer
+      time_spent_on_question:
+        type: integer
+      time_spent_sec:
+        type: integer
+      timestamp:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Сервис для анализа активности студентов.
+  title: Student Analytics API
+  version: "1.0"
+paths:
+  /analytics/{student_id}:
+    get:
+      parameters:
+      - description: ID Студента
+        in: path
+        name: student_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.StudentAnalytics'
+      summary: Получить аналитику студента
+      tags:
+      - analytics
+  /log:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные лога
+        in: body
+        name: log
+        required: true
+        schema:
+          $ref: '#/definitions/domain.StudentLog'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Отправить лог активности
+      tags:
+      - logs
+swagger: "2.0"

@@ -14,14 +14,14 @@ type AnalyticsService interface {
     GetAnalytics(ctx context.Context, studentID uint64) (*domain.StudentAnalytics, error)
     TriggerAnalysis(ctx context.Context, studentID uint64) error
     
-    GetStudents(ctx context.Context) ([]*domain.Student, error)
+    GetStudents(ctx context.Context) ([]uint64, error)
     GetStudentByID(ctx context.Context, id uint64) (*domain.Student, error)
 }
 
 type Repository interface {
     SaveStudent(ctx context.Context, student *domain.Student) error
     GetStudentByID(ctx context.Context, id uint64) (*domain.Student, error)
-    GetStudents(ctx context.Context) ([]*domain.Student, error)
+    GetStudents(ctx context.Context) ([]uint64, error)
     
     SaveLog(ctx context.Context, log *domain.StudentLog) error
     GetLogsByStudentID(ctx context.Context, studentID uint64, from, to time.Time) ([]*domain.StudentLog, error)

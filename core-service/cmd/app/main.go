@@ -23,6 +23,11 @@ import (
 	"github.com/RusselRustCode/teacher_analytics/core-service/proto"
 )
 
+// @title Student Analytics API
+// @version 1.0
+// @description Сервис для анализа активности студентов.
+// @host localhost:8080
+// @BasePath /api
 func main() {
 	cfg := config.LoadConfig()
 
@@ -96,13 +101,7 @@ func startHTTPServer(port string, service interfaces.AnalyticsService) {
 
 	handler := internal_http.NewHTTPHandler(service)
 
-	api := router.Group("/api")
-	{
-		api.POST("/log", handler.SendLog)
-		api.GET("/analytics/:student_id", handler.GetAnalytics)
-		api.GET("/students/:student_id/logs", handler.GetStudentLogs)
-		api.GET("/students", handler.GetStudents)
-	}
+	internal_http.SetupRoutes(router, handler)
 
 	log.Printf("HTTP-сервер прослушивает :%s", port)
 	if err := router.Run(":" + port); err != nil {

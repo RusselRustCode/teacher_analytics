@@ -66,15 +66,15 @@ services:
       kafka:
         condition: service_started
     environment:
-      - DB_HOST=postgres
+      - DB_HOST=student-analytics-postgres
       - DB_PORT=5432
       - DB_USER=admin
       - DB_PASSWORD=admin_password
       - DB_NAME=student_analytics
-      - REDIS_HOST=redis
+      - REDIS_HOST=student-analytics-redis
       - REDIS_PORT=6379
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9094
-      - ANALYTICS_GRPC_HOST=analytics-service
+      - ANALYTICS_GRPC_HOST=student-analytics-python
       - ANALYTICS_GRPC_PORT=50052
     networks:
       - student-net

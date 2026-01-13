@@ -156,23 +156,23 @@ func (_m *Repository) GetStudentByID(ctx context.Context, id uint64) (*domain.St
 }
 
 // GetStudents provides a mock function with given fields: ctx
-func (_m *Repository) GetStudents(ctx context.Context) ([]*domain.Student, error) {
+func (_m *Repository) GetStudents(ctx context.Context) ([]uint64, error) {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetStudents")
 	}
 
-	var r0 []*domain.Student
+	var r0 []uint64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]*domain.Student, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) ([]uint64, error)); ok {
 		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []*domain.Student); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) []uint64); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*domain.Student)
+			r0 = ret.Get(0).([]uint64)
 		}
 	}
 
